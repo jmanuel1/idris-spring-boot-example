@@ -6,7 +6,7 @@ import System.FFI
 namespace BeanFactory
     public export
     BeanFactory : Type
-    BeanFactory = Struct "i:org/springframework/beans/factory/BeanFactory" []
+    BeanFactory = Struct "i:io/micronaut/context/BeanLocator" []
 
     %foreign "jvm:.getBean"
     prim_getBean : BeanFactory -> Class ty -> PrimIO (ty)

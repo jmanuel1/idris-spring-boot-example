@@ -8,23 +8,14 @@ import Control.App
 %export
     """
     jvm:import
-    io/github/mmhelloworld/idrisspringboot/SpringContext
-    org/springframework/context/annotation/Configuration
-    org/springframework/context/ApplicationContext
-    org/springframework/context/ApplicationContextAware
-    org/springframework/stereotype/Component
+    io/micronaut/context/ApplicationContext
     """
 jvmImports : List String
 jvmImports = []
 
 public export
-ConfigurableApplicationContext : Type
-ConfigurableApplicationContext = Struct "org/springframework/context/ConfigurableApplicationContext" []
-
-namespace ApplicationContext
-    public export
-    ApplicationContext : Type
-    ApplicationContext = Struct "org/springframework/context/ApplicationContext" []
+ApplicationContext : Type
+ApplicationContext = Struct "io/micronaut/context/ApplicationContext" []
 
 public export
 Inherits ApplicationContext BeanFactory where

@@ -1,11 +1,7 @@
-import org.springframework.boot.gradle.tasks.bundling.BootJar
-import org.springframework.boot.gradle.plugin.ResolveMainClassName
-
-val SPRING_BOOT_VERSION = "3.1.1"
+val MICRONAUT_VERSION = "3.10.4"
 
 plugins {
     application
-    id("org.springframework.boot") version "3.1.1"
 }
 
 repositories {
@@ -16,6 +12,28 @@ repositories {
 }
 
 dependencies {
+    implementation(platform("io.micronaut:micronaut-bom:$MICRONAUT_VERSION"))
+    annotationProcessor("io.micronaut:micronaut-http-validation")
+    annotationProcessor("io.micronaut.serde:micronaut-serde-processor")
+    annotationProcessor("io.micronaut.spring:micronaut-spring-annotation")
+    annotationProcessor("io.micronaut.spring:micronaut-spring-boot-annotation")
+    annotationProcessor("io.micronaut.spring:micronaut-spring-web-annotation")
+    annotationProcessor("io.micronaut.validation:micronaut-validation-processor")
+    implementation("io.micronaut:micronaut-http-server")
+    implementation("io.micronaut:micronaut-http-server-netty")
+    implementation("io.micronaut.serde:micronaut-serde-jackson")
+    implementation("io.micronaut:micronaut-validation:$MICRONAUT_VERSION")
+    implementation("jakarta.validation:jakarta.validation-api")
+    implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    compileOnly("io.micronaut:micronaut-http-client")
+    runtimeOnly("ch.qos.logback:logback-classic")
+    runtimeOnly("io.micronaut.spring:micronaut-spring-boot")
+    runtimeOnly("io.micronaut.spring:micronaut-spring-web")
+    runtimeOnly("org.yaml:snakeyaml")
+    testAnnotationProcessor("io.micronaut.spring:micronaut-spring-boot-annotation")
+    testAnnotationProcessor("io.micronaut.spring:micronaut-spring-web-annotation")
+    testImplementation("io.micronaut:micronaut-http-client")
     implementation(libs.org.springframework.boot.spring.boot.starter.data.jpa)
     implementation(libs.org.hibernate.common.hibernate.commons.annotations)
     implementation(libs.org.hibernate.validator.hibernate.validator)
@@ -23,16 +41,11 @@ dependencies {
     implementation(libs.jakarta.xml.bind.jakarta.xml.bind.api)
     implementation(libs.org.glassfish.jaxb.jaxb.runtime)
     implementation(libs.net.bytebuddy.byte.buddy)
-    implementation(libs.org.springframework.boot.spring.boot.starter.web)
-    implementation(libs.org.springframework.boot.spring.boot.starter.tomcat)
-    implementation(libs.org.jboss.logging.jboss.logging)
-    testImplementation(libs.org.springframework.boot.spring.boot.starter.test)
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:${SPRING_BOOT_VERSION}"))
 }
 
 group = "io.github.mmhelloworld"
 version = "0.0.1-SNAPSHOT"
-description = "idris-spring-boot-example"
+description = "idris-micronaut-example"
 java.sourceCompatibility = JavaVersion.VERSION_17
 
 tasks.register<Copy>("copyDependencies") {
@@ -50,11 +63,15 @@ tasks.withType<Jar>  {
     enabled = false
 }
 
-tasks.withType<BootJar>  {
-    enabled = false
+tasks.withType<CreateStartScripts> {
+  enabled = false
 }
 
-tasks.withType<ResolveMainClassName> {
+tasks.named("distTar") {
+  enabled = false
+}
+
+tasks.named("distZip") {
   enabled = false
 }
 
@@ -66,10 +83,6 @@ task<Exec>("idrisCompile") {
 
 tasks.named("build") {
   dependsOn("copyDependencies", "idrisCompile")
-}
-
-springBoot {
-	mainClass.set("idrisspringbootexample.Main")
 }
 
 application {
