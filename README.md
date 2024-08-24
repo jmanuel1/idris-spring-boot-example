@@ -6,7 +6,7 @@ An example Idris project demonstrating how to export functions and generate clas
 
 ### Compile
 ```shell
-./mvnw package
+./gradlew build
 ```
 
 ### Start MySQL server
@@ -36,4 +36,3 @@ export PAYROLL_PASSWORD
 ```shell
 java -cp "build/exec/idrisspringbootexample_app:target/classes:build/exec/idrisspringbootexample_app/*" idrisspringbootexample.Main
 ```
-
