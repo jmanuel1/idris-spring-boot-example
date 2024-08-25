@@ -13,12 +13,15 @@ repositories {
 
 dependencies {
     implementation(platform("io.micronaut:micronaut-bom:$MICRONAUT_VERSION"))
-    annotationProcessor("io.micronaut:micronaut-http-validation")
-    annotationProcessor("io.micronaut.serde:micronaut-serde-processor")
-    annotationProcessor("io.micronaut.spring:micronaut-spring-annotation")
-    annotationProcessor("io.micronaut.spring:micronaut-spring-boot-annotation")
-    annotationProcessor("io.micronaut.spring:micronaut-spring-web-annotation")
-    annotationProcessor("io.micronaut.validation:micronaut-validation-processor")
+    annotationProcessor("io.micronaut:micronaut-inject-java:$MICRONAUT_VERSION")
+    implementation("io.micronaut:micronaut-inject")
+    annotationProcessor("io.micronaut:micronaut-http-validation:$MICRONAUT_VERSION")
+    annotationProcessor("io.micronaut.serde:micronaut-serde-processor:2.11.0")
+    annotationProcessor(platform("io.micronaut.spring:micronaut-spring-bom:5.8.0"))
+    annotationProcessor("io.micronaut.spring:micronaut-spring-annotation:5.8.0")
+    annotationProcessor("io.micronaut.spring:micronaut-spring-boot-annotation:$MICRONAUT_VERSION")
+    annotationProcessor("io.micronaut.spring:micronaut-spring-web-annotation:$MICRONAUT_VERSION")
+    annotationProcessor("io.micronaut.validation:micronaut-validation-processor:4.7.0")
     implementation("io.micronaut:micronaut-http-server")
     implementation("io.micronaut:micronaut-http-server-netty")
     implementation("io.micronaut.serde:micronaut-serde-jackson")
@@ -41,6 +44,9 @@ dependencies {
     implementation(libs.jakarta.xml.bind.jakarta.xml.bind.api)
     implementation(libs.org.glassfish.jaxb.jaxb.runtime)
     implementation(libs.net.bytebuddy.byte.buddy)
+    // [COPYDEP] FIXME: Depending on the dependencies that are copied into here
+    // later
+    implementation(layout.projectDirectory.dir("build").dir("exec").dir("idrisspringbootexample_app").asFileTree)
 }
 
 group = "io.github.mmhelloworld"
@@ -50,7 +56,18 @@ java.sourceCompatibility = JavaVersion.VERSION_17
 
 tasks.register<Copy>("copyDependencies") {
     from(configurations.runtimeClasspath)
-    into(layout.projectDirectory.dir("build/exec/idrisspringbootexample_app"))
+    val idrisBuildDir = layout.projectDirectory.dir("build/exec/idrisspringbootexample_app")
+    exclude("$idrisBuildDir/**")
+    eachFile(object : Action<FileCopyDetails> {
+      override fun execute(f: FileCopyDetails) {
+        /* println(f.file.absolutePath) */
+        if (idrisBuildDir.asFileTree.contains(f.file)) {
+          f.exclude()
+        }
+      }
+    })
+    into(idrisBuildDir)
+    duplicatesStrategy = DuplicatesStrategy.WARN
 }
 
 sourceSets {
@@ -75,14 +92,15 @@ tasks.named("distZip") {
   enabled = false
 }
 
-task<Exec>("idrisCompile") {
+task<Exec>("compileIdris") {
     commandLine("idris2", "--build", "idrisspringbootexample.ipkg")
     workingDir(layout.projectDirectory)
     environment("IDRIS2_CG", "jvm")
 }
 
-tasks.named("build") {
-  dependsOn("copyDependencies", "idrisCompile")
+tasks.named("compileJava") {
+  // See COPYDEP.
+  dependsOn("compileIdris", "copyDependencies")
 }
 
 application {

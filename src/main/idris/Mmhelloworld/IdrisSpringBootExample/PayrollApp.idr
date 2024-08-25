@@ -8,23 +8,63 @@ import System.FFI
 import Java.Lang
 import Java.Util
 
+%export """
+  jvm:import
+  io/github/mmhelloworld/helloworld/EmployeeService
+"""
+jvmImports : List String
+jvmImports = []
+
+%export """
+        jvm:public EmployeeService
+        """
 public export
-interface PayrollApp e where
-    saveEmployee : Employee -> App e Employee
-    getEmployees : App e (JList Employee)
+EmployeeService : Type
+EmployeeService = Struct "io/github/mmhelloworld/helloworld/EmployeeService" []
 
 public export
-Has [App.PrimIO, SpringContextAware] e => PayrollApp e where
-    saveEmployee employee = do
-        employeeRepository <- getBean (classLiteral {ty=EmployeeRepository})
-        primIO $ save {entity=Employee} {id=Int64} (subtyping employeeRepository) employee
+%export """
+  jvm:public static saveEmployee
+  {
+    "enclosingType": "EmployeeService",
+    "arguments": [
+      {"type": "EmployeeRepository"},
+      {"type": "Employee"}
+    ],
+    "returnType": "Employee"
+  }
+"""
+saveEmployee : EmployeeRepository => Employee -> IO Employee
+saveEmployee employee =
+  save {entity=Employee} {id=Int64} (subtyping (the EmployeeRepository %search)) employee
 
-    getEmployees = do
-        employeeRepository <- getBean (classLiteral {ty=EmployeeRepository})
-        primIO $ findAll {id=Int64} (subtyping employeeRepository)
+public export
+%export """
+  jvm:public static getEmployees
+  {
+    "enclosingType": "EmployeeService",
+    "arguments": [
+      {"type": "EmployeeRepository"}
+    ],
+    "returnType": "List<Employee>"
+  }
+"""
+getEmployees : EmployeeRepository => IO (JList Employee)
+getEmployees =
+  findAll {id=Int64} (subtyping (the EmployeeRepository %search))
 
 export
-initDatabase : Has [PayrollApp] e => App e ()
+%export """
+  jvm:public static initDatabase
+  {
+    "enclosingType": "EmployeeService",
+    "arguments": [
+      {"type": "EmployeeRepository"}
+    ],
+    "returnType": "void"
+  }
+"""
+initDatabase : EmployeeRepository => IO ()
 initDatabase = do
     ignore $ saveEmployee $ Employee.new "Bilbo Baggins" "burglar"
     ignore $ saveEmployee $ Employee.new "Frodo Baggins" "thief"

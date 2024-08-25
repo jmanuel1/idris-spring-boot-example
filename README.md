@@ -6,7 +6,7 @@ An example Idris project demonstrating how to export functions and generate clas
 
 ### Compile
 ```shell
-./gradlew build
+./gradlew assemble
 ```
 
 ### Start MySQL server
