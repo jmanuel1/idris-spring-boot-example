@@ -1,7 +1,19 @@
 val MICRONAUT_VERSION = "3.10.4"
 
 plugins {
-    application
+    /* id("com.github.johnrengelman.shadow") version "7.1.2" */
+    id("io.micronaut.application") version "3.7.10"
+}
+
+graalvmNative.toolchainDetection.set(false)
+micronaut {
+  version = MICRONAUT_VERSION
+    runtime("netty")
+    testRuntime("junit5")
+    /* processing {
+        incremental(true)
+        annotations("com.example.*")
+    } */
 }
 
 repositories {
@@ -11,48 +23,35 @@ repositories {
     }
 }
 
+val idrisBuildDir = layout.projectDirectory.dir("build").dir("exec").dir("idrisspringbootexample_app")
+
 dependencies {
-    implementation(platform("io.micronaut:micronaut-bom:$MICRONAUT_VERSION"))
-    annotationProcessor("io.micronaut:micronaut-inject-java:$MICRONAUT_VERSION")
-    implementation("io.micronaut:micronaut-inject")
-    annotationProcessor("io.micronaut:micronaut-http-validation:$MICRONAUT_VERSION")
-    annotationProcessor("io.micronaut.serde:micronaut-serde-processor:2.11.0")
-    annotationProcessor(platform("io.micronaut.spring:micronaut-spring-bom:5.8.0"))
-    annotationProcessor("io.micronaut.spring:micronaut-spring-annotation:5.8.0")
-    annotationProcessor("io.micronaut.spring:micronaut-spring-boot-annotation:$MICRONAUT_VERSION")
-    annotationProcessor("io.micronaut.spring:micronaut-spring-web-annotation:$MICRONAUT_VERSION")
-    annotationProcessor("io.micronaut.validation:micronaut-validation-processor:4.7.0")
-    implementation("io.micronaut:micronaut-http-server")
-    implementation("io.micronaut:micronaut-http-server-netty")
-    implementation("io.micronaut.serde:micronaut-serde-jackson")
-    implementation("io.micronaut:micronaut-validation:$MICRONAUT_VERSION")
-    implementation("jakarta.validation:jakarta.validation-api")
-    implementation("org.springframework.boot:spring-boot-starter")
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    compileOnly("io.micronaut:micronaut-http-client")
-    runtimeOnly("ch.qos.logback:logback-classic")
-    runtimeOnly("io.micronaut.spring:micronaut-spring-boot")
-    runtimeOnly("io.micronaut.spring:micronaut-spring-web")
-    runtimeOnly("org.yaml:snakeyaml")
-    testAnnotationProcessor("io.micronaut.spring:micronaut-spring-boot-annotation")
-    testAnnotationProcessor("io.micronaut.spring:micronaut-spring-web-annotation")
-    testImplementation("io.micronaut:micronaut-http-client")
-    implementation(libs.org.springframework.boot.spring.boot.starter.data.jpa)
-    implementation(libs.org.hibernate.common.hibernate.commons.annotations)
-    implementation(libs.org.hibernate.validator.hibernate.validator)
-    implementation(libs.com.mysql.mysql.connector.j)
-    implementation(libs.jakarta.xml.bind.jakarta.xml.bind.api)
-    implementation(libs.org.glassfish.jaxb.jaxb.runtime)
-    implementation(libs.net.bytebuddy.byte.buddy)
+  annotationProcessor("io.micronaut:micronaut-http-validation")
+  implementation("io.micronaut:micronaut-http-client")
+  implementation("io.micronaut:micronaut-jackson-databind")
+  implementation("jakarta.annotation:jakarta.annotation-api")
+  runtimeOnly("ch.qos.logback:logback-classic")
+  implementation("io.micronaut.sql:micronaut-hibernate-jpa")
+  implementation("io.micronaut.data:micronaut-data-tx-hibernate")
+  implementation("io.micronaut.sql:micronaut-jdbc-hikari")
+  runtimeOnly("com.h2database:h2")
+  /* annotationProcessor("io.micronaut.validation:micronaut-validation-processor") */
+  /* implementation("io.micronaut.validation:micronaut-validation") */
+  /* annotationProcessor("io.micronaut:micronaut-validation-processor:$MICRONAUT_VERSION") */
+  implementation("io.micronaut:micronaut-validation")
     // [COPYDEP] FIXME: Depending on the dependencies that are copied into here
     // later
-    implementation(layout.projectDirectory.dir("build").dir("exec").dir("idrisspringbootexample_app").asFileTree)
+    implementation(files(idrisBuildDir, idrisBuildDir.asFileTree))
+    /* implementation(idrisBuildDir.asFileTree) */
 }
 
 group = "io.github.mmhelloworld"
 version = "0.0.1-SNAPSHOT"
 description = "idris-micronaut-example"
-java.sourceCompatibility = JavaVersion.VERSION_17
+java {
+    sourceCompatibility = JavaVersion.toVersion("17")
+    targetCompatibility = JavaVersion.toVersion("17")
+}
 
 tasks.register<Copy>("copyDependencies") {
     from(configurations.runtimeClasspath)
@@ -72,7 +71,7 @@ tasks.register<Copy>("copyDependencies") {
 
 sourceSets {
   main {
-    output.resourcesDir = layout.projectDirectory.dir("build").dir("exec").dir("idrisspringbootexample_app").asFile
+    output.resourcesDir = idrisBuildDir.asFile
   }
 }
 
@@ -98,9 +97,16 @@ task<Exec>("compileIdris") {
     environment("IDRIS2_CG", "jvm")
 }
 
-tasks.named("compileJava") {
+tasks.named<JavaCompile>("compileJava") {
   // See COPYDEP.
   dependsOn("compileIdris", "copyDependencies")
+  /* options.compilerArgs.add("-Xdiags:verbose") */
+  doFirst {
+    /* classpath += files(idrisBuildDir)
+    classpath += idrisBuildDir.asFileTree */
+    /* println(classpath.files.toString()) */
+
+  }
 }
 
 application {

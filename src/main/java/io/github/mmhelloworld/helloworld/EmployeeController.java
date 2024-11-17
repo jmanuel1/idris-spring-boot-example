@@ -1,6 +1,7 @@
 package io.github.mmhelloworld.helloworld;
 
-import io.github.mmhelloworld.helloworld.EmployeeRepository;
+import io.github.mmhelloworld.helloworld.Employee;
+import io.github.mmhelloworld.helloworld.EmployeeRepositoryBean;
 import io.github.mmhelloworld.helloworld.EmployeeService;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
@@ -14,9 +15,9 @@ compile-time from the source code.
 */
 @Controller("/")
 public class EmployeeController {
-  EmployeeRepository employeeRepository;
+  EmployeeRepositoryBean employeeRepository;
 
-  EmployeeController(EmployeeRepository employeeRepository) {
+  EmployeeController(EmployeeRepositoryBean employeeRepository) {
     this.employeeRepository = employeeRepository;
   }
 

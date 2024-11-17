@@ -1,8 +1,9 @@
 module Mmhelloworld.IdrisSpringBootExample.PayrollStore
 
-import Org.Springframework.Data.Jpa.Repository
 import System.FFI
 import Java.Lang
+import Java.Util
+import public Jpa.EntityManager
 
 %export
     """
@@ -10,17 +11,35 @@ import Java.Lang
     org/springframework/web/bind/annotation/GetMapping Get
     io/github/mmhelloworld/helloworld/Employee
     io/github/mmhelloworld/helloworld/EmployeeRepository
-    org/springframework/data/jpa/repository/JpaRepository
-    com/fasterxml/jackson/annotation/JsonProperty
+    io/github/mmhelloworld/helloworld/EmployeeRepositoryBean
+    io/micronaut/serde/annotation/Serdeable
+    com/fasterxml/jackson/annotation/JsonIgnore
     com/fasterxml/jackson/annotation/JsonCreator
+    com/fasterxml/jackson/annotation/JsonProperty
     java/util/List
     java/lang/Long
+    jakarta/persistence/Column
     jakarta/persistence/Entity
+    jakarta/persistence/EntityManager
     jakarta/persistence/Id
     jakarta/persistence/GeneratedValue
+    jakarta/persistence/Table
+    jakarta/validation/constraints/NotNull
     """
 jvmImports : List String
 jvmImports = []
+
+%export """
+    jvm:public EmployeeRepositoryBean
+    {}
+    """
+public export
+EmployeeRepositoryBean : Type
+EmployeeRepositoryBean = Struct "io/github/mmhelloworld/helloworld/EmployeeRepositoryBean" []
+
+export
+%foreign "jvm:#entityManager(EmployeeRepositoryBean EntityManager),EmployeeRepositoryBean"
+entityManager : EmployeeRepositoryBean => IO EntityManager
 
 namespace Employee
 
@@ -75,17 +94,43 @@ namespace EmployeeRepository
      - Repository to manage employees in database
      -}
     %export """
-        jvm:public abstract interface EmployeeRepository
-        {
-            "extends": ["JpaRepository<Employee, Long>"]
-        }
+        jvm:public EmployeeRepository
+        {}
         """
     public export
     EmployeeRepository : Type
     EmployeeRepository = Struct "io/github/mmhelloworld/helloworld/EmployeeRepository" []
 
-export
-Inherits EmployeeRepository (CrudRepository Employee Int64) where
+    export
+    %export """
+      jvm:public static findAll
+      {
+        "enclosingType": "EmployeeRepository",
+        "arguments": [
+          {"type": "EntityManager"}
+        ],
+        "returnType": "List<Employee>"
+      }
+    """
+    findAll : EntityManager => IO (JList Employee)
+    findAll = do
+      let qlString = "SELECT * FROM employee"
+      query <- the (IO (TypedQuery Employee)) $ createQuery qlString
+      query.getResultList
 
-export
-Inherits EmployeeRepository (JpaRepository Employee Int64) where
+    export
+    %export """
+      jvm:public static save
+      {
+        "enclosingType": "EmployeeRepository",
+        "arguments": [
+          {"type": "EntityManager"},
+          {"type": "Employee"}
+        ],
+        "returnType": "Employee"
+      }
+    """
+    save : EntityManager => Employee -> IO Employee
+    save employee = do
+      persist employee
+      pure employee
